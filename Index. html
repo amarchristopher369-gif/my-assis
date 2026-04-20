@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Boss Assistant – आपकी AI सहेली</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a14;
+    --surface: #13131f;
+    --card: #1a1a2e;
+    --accent: #e040fb;
+    --accent2: #7c4dff;
+    --accent3: #00e5ff;
+    --text: #f0e6ff;
+    --muted: #8080aa;
+    --danger: #ff4081;
+    --success: #69f0ae;
+    --warn: #ffea00;
+    --glow: 0 0 30px #e040fb55;
+    --glow2: 0 0 20px #7c4dff44;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, #7c4dff18 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, #e040fb14 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, #00e5ff0a 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: bgPulse 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes bgPulse {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px 24px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 28px 0 16px;
+  }
+
+  .header .brand {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #e040fb, #7c4dff, #00e5ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+  }
+
+  .header .tagline {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Avatar orb */
+  .avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    flex-shrink: 0;
+  }
+
+  .orb-container {
+    position: relative;
+    width: 180px;
+    height: 180px;
+  }
+
+  .orb-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    animation: spinRing 4s linear infinite;
+  }
+
+  .orb-ring.r1 {
+    background: linear-gradient(var(--bg), var(--bg)) padding-box,
+                linear-gradient(0deg, #e040fb, #7c4dff) border-box;
+    inset: -8px;
+    opacity: 0.5;
+    animation-duration: 6s;
+  }
+
+  .orb-ring.r2 {
+    background: linear-gradient(var(--bg), var(--bg)) padding-box,
+                linear-gradient(90deg, #00e5ff, #e040fb) border-box;
+    inset: -18px;
+    opacity: 0.25;
+    animation-duration: 10s;
+    animation-direction: reverse;
+  }
+
+  @keyframes spinRing {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .orb {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #2a1a4e, #0d0d1a 70%);
+    border: 2px solid #e040fb44;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 0 60px #e040fb22, inset 0 0 40px #7c4dff11;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .orb.listening {
+    box-shadow: 0 0 80px #e040fb55, 0 0 120px #7c4dff33, inset 0 0 40px #e040fb11;
+    animation: orbPulse 1.2s ease-in-out infinite;
+  }
+
+  .orb.speaking {
+    box-shadow: 0 0 80px #00e5ff55, 0 0 120px #00e5ff33, inset 0 0 40px #00e5ff11;
+    border-color: #00e5ff44;
+  }
+
+  @keyframes orbPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+
+  .avatar-emoji {
+    font-size: 72px;
+    line-height: 1;
+    filter: drop-shadow(0 0 16px #e040fb88);
+    transition: all 0.3s ease;
+    user-select: none;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* Waveform */
+  .waveform {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 40px;
+    margin: 12px 0;
+  }
+
+  .wave-bar {
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    height: 8px;
+    transition: height 0.1s ease;
+    opacity: 0.3;
+  }
+
+  .waveform.active .wave-bar {
+    opacity: 1;
+    animation: waveDance 0.8s ease-in-out infinite;
+  }
+
+  .waveform.speaking .wave-bar {
+    background: linear-gradient(180deg, var(--accent3), var(--accent2));
+    animation: waveDance 0.5s ease-in-out infinite;
+  }
+
+  .wave-bar:nth-child(1) { animation-delay: 0s; }
+  .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+  .wave-bar:nth-child(5) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(6) { animation-delay: 0.25s; }
+  .wave-bar:nth-child(7) { animation-delay: 0.15s; }
+  .wave-bar:nth-child(8) { animation-delay: 0.05s; }
+  .wave-bar:nth-child(9) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(10) { animation-delay: 0.3s; }
+  .wave-bar:nth-child(11) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(12) { animation-delay: 0.15s; }
+
+  @keyframes waveDance {
+    0%, 100% { height: 6px; }
+    50% { height: 28px; }
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #ffffff11;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    background: var(--card);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: all 0.3s ease;
+  }
+
+  .status-badge.listening .status-dot {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    animation: dotPulse 1s ease-in-out infinite;
+  }
+
+  .status-badge.speaking .status-dot {
+    background: var(--accent3);
+    box-shadow: 0 0 10px var(--accent3);
+    animation: dotPulse 0.6s ease-in-out infinite;
+  }
+
+  .status-badge.thinking .status-dot {
+    background: var(--warn);
+    box-shadow: 0 0 10px var(--warn);
+    animation: dotPulse 0.4s ease-in-out infinite;
+  }
+
+  @keyframes dotPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* Conversation area */
+  .convo-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+    overflow-y: auto;
+    max-height: 40vh;
+    scrollbar-width: thin;
+    scrollbar-color: #e040fb22 transparent;
+  }
+
+  .convo-area::-webkit-scrollbar { width: 3px; }
+  .convo-area::-webkit-scrollbar-track { background: transparent; }
+  .convo-area::-webkit-scrollbar-thumb { background: #e040fb44; border-radius: 3px; }
+
+  .message {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: msgSlide 0.3s ease-out;
+  }
+
+  @keyframes msgSlide {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .msg-avatar.ai { background: linear-gradient(135deg, #2a1a4e, #1a0d3a); border: 1px solid #e040fb44; }
+  .msg-avatar.user { background: linear-gradient(135deg, #0d2a2a, #0a1a1a); border: 1px solid #00e5ff44; }
+
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 80%;
+  }
+
+  .message.ai .msg-bubble {
+    background: var(--card);
+    border: 1px solid #e040fb22;
+    border-top-left-radius: 4px;
+    color: var(--text);
+  }
+
+  .message.user .msg-bubble {
+    background: linear-gradient(135deg, #0d2a2a, #0a2020);
+    border: 1px solid #00e5ff22;
+    border-top-right-radius: 4px;
+    color: #b2fff9;
+  }
+
+  /* Emotion chip */
+  .emotion-chip {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #ffffff0a;
+    border: 1px solid #ffffff11;
+    color: var(--muted);
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding-top: 8px;
+    flex-shrink: 0;
+  }
+
+  .main-btn {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #e040fb, #7c4dff);
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 30px #e040fb44, 0 0 0 0 #e040fb44;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .main-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.2), transparent 60%);
+  }
+
+  .main-btn:active { transform: scale(0.93); }
+
+  .main-btn.listening {
+    background: linear-gradient(135deg, #ff4081, #e040fb);
+    box-shadow: 0 4px 30px #ff408144, 0 0 0 10px #ff408111;
+    animation: btnPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes btnPulse {
+    0%, 100% { box-shadow: 0 4px 30px #ff408144, 0 0 0 0px #ff408111; }
+    50% { box-shadow: 0 4px 30px #ff408144, 0 0 0 14px #ff408111; }
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid #ffffff15;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .icon-btn:active { transform: scale(0.9); opacity: 0.7; }
+  .icon-btn.active { border-color: var(--accent); color: var(--accent); background: #e040fb11; }
+
+  /* Transcript live */
+  .live-transcript {
+    background: var(--card);
+    border: 1px solid #e040fb22;
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 48px;
+    transition: all 0.3s ease;
+    font-style: italic;
+    width: 100%;
+    text-align: center;
+  }
+
+  .live-transcript.active {
+    color: var(--text);
+    border-color: #e040fb55;
+    font-style: normal;
+  }
+
+  /* API status */
+  .api-notice {
+    background: linear-gradient(135deg, #1a1a2e, #13131f);
+    border: 1px solid #7c4dff33;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  .api-notice strong { color: var(--accent); display: block; margin-bottom: 6px; }
+
+  .api-key-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .api-input {
+    flex: 1;
+    background: #0a0a14;
+    border: 1px solid #ffffff15;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: monospace;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .api-input:focus { border-color: var(--accent); }
+
+  .api-save-btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #e040fb, #7c4dff);
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+
+  .api-save-btn:active { opacity: 0.7; }
+
+  /* Permission screen */
+  .permission-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .perm-icon { font-size: 64px; animation: float 3s ease-in-out infinite; }
+  .perm-title { font-size: 20px; font-weight: 700; color: var(--text); }
+  .perm-desc { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 320px; }
+
+  .perm-btn {
+    padding: 16px 40px;
+    border-radius: 50px;
+    border: none;
+    background: linear-gradient(135deg, #e040fb, #7c4dff);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 30px #e040fb33;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: 'Noto Sans Devanagari', sans-serif;
+  }
+
+  .perm-btn:active { transform: scale(0.95); }
+
+  /* Hidden */
+  .hidden { display: none !important; }
+
+  /* Scrolling indicator */
+  .scroll-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0.5;
+    padding: 4px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">✦ AI Voice Agent ✦</div>
+    <h1>आपकी AI सहेली 🌸</h1>
+    <div class="tagline">हमेशा आपके साथ, Boss!</div>
+  </div>
+
+  <!-- Permission Screen -->
+  <div class="permission-screen" id="permScreen">
+    <div class="perm-icon">🎙️</div>
+    <div class="perm-title">नमस्ते Boss! 😊</div>
+    <div class="perm-desc">
+      मैं आपसे बात करने के लिए तैयार हूँ!<br>
+      बस माइक्रोफोन की परमिशन दीजिए और<br>
+      हम शुरू करते हैं! 🌟
+    </div>
+    <button class="perm-btn" onclick="requestPermission()">
+      🎤 माइक्रोफोन ऑन करें
+    </button>
+  </div>
+
+  <!-- Main App (hidden until permission) -->
+  <div id="mainApp" class="hidden" style="display:flex;flex-direction:column;flex:1;gap:0;">
+
+    <!-- API Key Input -->
+    <div class="api-notice" id="apiSection">
+      <strong>🔑 Anthropic API Key चाहिए</strong>
+      अपना API key डालें ताकि मैं आपसे intelligent तरीके से बात कर सकूँ Boss!
+      <div class="api-key-row">
+        <input type="password" class="api-input" id="apiKeyInput" placeholder="sk-ant-..." />
+        <button class="api-save-btn" onclick="saveApiKey()">Save</button>
+      </div>
+    </div>
+
+    <!-- Avatar -->
+    <div class="avatar-section">
+      <div class="orb-container">
+        <div class="orb-ring r2"></div>
+        <div class="orb-ring r1"></div>
+        <div class="orb" id="mainOrb">
+          <div class="avatar-emoji" id="avatarEmoji">🌸</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div style="display:flex;justify-content:center;margin-bottom:8px;">
+      <div class="status-badge" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">तैयार हूँ Boss…</span>
+      </div>
+    </div>
+
+    <!-- Waveform -->
+    <div class="waveform" id="waveform">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+
+    <!-- Live transcript -->
+    <div class="live-transcript" id="liveTranscript">
+      बोलिए Boss… मैं सुन रही हूँ 🎧
+    </div>
+
+    <!-- Conversation -->
+    <div class="convo-area" id="convoArea">
+      <!-- messages appear here -->
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="btn-row">
+        <button class="icon-btn" id="autoBtn" title="Auto mode" onclick="toggleAutoMode()">🔄</button>
+        <button class="main-btn" id="mainBtn" onclick="toggleListening()">🎤</button>
+        <button class="icon-btn" id="muteBtn" title="Mute AI" onclick="toggleMute()">🔊</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;">
+        <span id="autoModeLabel">Auto Mode: बंद</span> &nbsp;|&nbsp; Tap 🎤 to speak
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let apiKey = localStorage.getItem('bossApiKey') || '';
+let isListening = false;
+let isSpeaking = false;
+let isThinking = false;
+let autoMode = false;
+let muted = false;
+let recognition = null;
+let currentUtterance = null;
+let sessionMemory = [];
+let currentEmotion = 'neutral';
+
+// ─── EMOJI & EMOTION MAPS ─────────────────────────────────────────────────────
+const emotionEmojis = {
+  happy: '😄', sad: '🥺', angry: '😤', neutral: '🌸',
+  funny: '😂', caring: '🤗', excited: '🤩', calm: '😊',
+  thinking: '🤔', speaking: '🗣️'
+};
+
+const emotionKeywords = {
+  sad: ['उदास','रो','दुख','तकलीफ','परेशान','बुरा','थका','थकान','अकेला','अकेली'],
+  happy: ['खुश','मजा','मज़ा','शानदार','बढ़िया','great','खुशी','अच्छा','हैप्पी'],
+  angry: ['गुस्सा','नाराज','बेकार','बकवास','गलत','झूठ','frustrated','angry'],
+  funny: ['हाहा','lol','मजेदार','हँसी','हँसना','जोक','funny','हा हा'],
+  excited: ['wow','वाह','amazing','अद्भुत','कमाल','superb','fantastic'],
+};
+
+// ─── PERMISSION ──────────────────────────────────────────────────────────────
+async function requestPermission() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+    document.getElementById('permScreen').classList.add('hidden');
+    const mainApp = document.getElementById('mainApp');
+    mainApp.classList.remove('hidden');
+    mainApp.style.display = 'flex';
+
+    if (apiKey) {
+      document.getElementById('apiSection').style.display = 'none';
+      document.getElementById('apiKeyInput').value = apiKey;
+    }
+
+    initSpeechRecognition();
+    speak('नमस्ते Boss! 😊 मैं सुन रही हूँ… बताइए, क्या मदद करूँ आपकी?', 'neutral');
+  } catch(e) {
+    alert('Boss, माइक्रोफोन की परमिशन नहीं मिली। कृपया ब्राउज़र सेटिंग में जाकर परमिशन दें।');
+  }
+}
+
+// ─── API KEY ─────────────────────────────────────────────────────────────────
+function saveApiKey() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (apiKey) {
+    localStorage.setItem('bossApiKey', apiKey);
+    document.getElementById('apiSection').style.display = 'none';
+    speak('शुक्रिया Boss! API key मिल गई। अब मैं पूरी तरह तैयार हूँ! 🌟', 'happy');
+  }
+}
+
+// ─── SPEECH RECOGNITION ──────────────────────────────────────────────────────
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    setStatus('❌ Speech Recognition उपलब्ध नहीं', 'error');
+    return;
+  }
+
+  recognition = new SR();
+  recognition.lang = 'hi-IN';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isListening = true;
+    setStatus('सुन रही हूँ Boss… 🎧', 'listening');
+    document.getElementById('mainOrb').className = 'orb listening';
+    document.getElementById('waveform').className = 'waveform active';
+    document.getElementById('mainBtn').className = 'main-btn listening';
+    document.getElementById('avatarEmoji').textContent = '👂';
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    let final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        final += e.results[i][0].transcript;
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    const display = final || interim;
+    const live = document.getElementById('liveTranscript');
+    live.textContent = display || 'बोलिए Boss…';
+    live.className = display ? 'live-transcript active' : 'live-transcript';
+
+    if (final) {
+      stopListening();
+      processUserInput(final.trim());
+    }
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    if (autoMode && !isSpeaking && !isThin
